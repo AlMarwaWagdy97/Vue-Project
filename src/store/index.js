@@ -1,5 +1,7 @@
 import { createStore } from "vuex";
 import axios from 'axios'
+axios.defaults.baseURL = "http://127.0.0.1:8000/api/";
+
 
 export default createStore({
   state: {
@@ -8,6 +10,8 @@ export default createStore({
     user: [],
     error: null,
     name: null,
+
+    postsdata: [],
   },
   mutations: {
     SET_Logged(state, payload){
@@ -23,13 +27,16 @@ export default createStore({
     SET_Error(state,payload){
       this.error = payload;
     },
+    SET_PostData(state, posts){
+        this.postsdata = posts;
+    }
   
   },
   actions: {
 
     createPostsAction({commit},payload){
       return new Promise((resolve, reject) => {
-        axios.post('http://127.0.0.1:8000/api/posts',{
+        axios.post('posts',{
             title: payload.title,
             description: payload.description,
           })
@@ -44,11 +51,9 @@ export default createStore({
         })
       });
     },
-    
-    
     performLoginAction({commit}, payload){
       return new Promise((resolve, reject) => {
-        axios.post('http://127.0.0.1:8000/api/login',
+        axios.post('login',
           {
             email: payload.email,
             password: payload.password
@@ -75,7 +80,7 @@ export default createStore({
     },
     PerformLogoutAction({commit}){
       return new Promise((resolve, reject) => {
-        axios.get('http://127.0.0.1:8000/api/logout')
+        axios.get('logout')
         .then(res => {
           console.log("resLogout",res );
           commit('SET_Error', null);
@@ -91,10 +96,9 @@ export default createStore({
         })
       })
     },
-
     preFormRegisterAction({commit}, payload){
       return new Promise((resolve, reject) => {
-        axios.post('http://127.0.0.1:8000/api/register',
+        axios.post('register',
         {
           name: payload.name, 
           email: payload.email, 
@@ -126,7 +130,77 @@ export default createStore({
         })
       })
   
-  }
+    },
+    
+    Get_PostsAction({commit}){
+      return new Promise((resolve, reject) => {
+        axios.get('posts')
+        .then((postsData)=> {
+          commit("SET_PostData",postsData.data.data);
+          this.state.postsdata = postsData.data.data;
+          resolve(postsData.data.data);
+        })
+        .catch((error)=>{
+          console.log(error);
+          reject(error);
+
+        })
+    });
+    },
+    CreatPostAction({commit},payload){
+      console.log("payload",payload);
+      return new Promise((resolve, reject) => {
+        axios.post('posts', {
+          title :payload.title,
+          body :payload.body,
+      }
+      ).then(res =>{
+        this.dispatch('Get_PostsAction');
+          commit('SET_Error', res.data.msg);
+          resolve(res)
+      }).catch(error =>{
+          console.log("Error in create Posts", error);
+          reject(error)
+      })
+      })
+    },
+    EditPostAction({commit},payload){
+      console.log("payload",payload);
+      return new Promise((resolve, reject) => {
+        axios.post('posts/'+payload.id, {
+          title :payload.title,
+          body :payload.body,
+      }
+      ).then(res =>{
+          commit('SET_Error', res.data.msg);
+
+          resolve(res)
+      }).catch(error =>{
+          console.log("Error in create Posts", error);
+          reject(error)
+      })
+      })
+    },
+    DeletePostAction({commit},payload){
+      console.log(payload);
+      return new Promise((resolve, reject) => {
+        axios.delete('posts/'+payload.id
+      ).then(res =>{
+        console.log("sucess", res);
+        this.dispatch('Get_PostsAction');
+        commit('SET_Error', res.data.msg);
+          resolve(res)
+      }).catch(error =>{
+        this.dispatch('Get_PostsAction');
+          console.log("Error in Delete Posts", error);
+          reject(error)
+      })
+      })
+    },
+
+
+
+    
 },
   modules: {},
   getters: {

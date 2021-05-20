@@ -21,6 +21,11 @@
                     <a class="nav-link">profile</a>
                 </li>
             </router-link>
+             <router-link to="/posts" v-if="loggedIn">
+              <li class="nav-item">
+                  <a class="nav-link">Posts</a>
+                </li>
+            </router-link>            
 
         </ul>
         <ul class="navbar-nav">
